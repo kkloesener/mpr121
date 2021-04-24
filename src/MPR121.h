@@ -253,7 +253,7 @@ class MPR121_type
 
     // begin() must be called before using any other function
     // address is optional, default is 0x5C
-    bool begin(uint8_t address = 0x5C, uint8_t touchThreshold = 40, uint8_t releaseThreshold = 20, uint8_t interruptPin = 4);
+    bool begin(uint8_t address = 0x5C, uint8_t touchThreshold = 40, uint8_t releaseThreshold = 20, uint8_t interruptPin = 4, TwoWire *TwoWireInstance = &Wire);
 
     // read touch and release threshold saved to EEPROM using
     // saveTouchThreshold and releaseTouchThreshold
@@ -447,6 +447,7 @@ class MPR121_type
   private:
     // internal helper functions and variables
     // not exposed externally to the user
+   	TwoWire *_TwoWireInstance = NULL;	// TwoWire Instance
     uint8_t address;
     MPR121_settings_type defaultSettings;
     uint8_t ECR_backup; // so we can re-enable the correct number of electrodes
@@ -465,6 +466,6 @@ class MPR121_type
 
 };
 
-extern MPR121_type MPR121;
+// extern MPR121_type MPR121;     // should always be externally instantiated
 
 #endif // MPR121_H
