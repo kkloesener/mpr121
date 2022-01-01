@@ -80,10 +80,10 @@ void MPR121_type::setRegister(uint8_t reg, uint8_t value){
                 // unless modding MPR121_ECR or GPIO / LED register
   }
 
-    _TwoWireInstance.beginTransmission(address);
-    _TwoWireInstance.write(reg);
-    _TwoWireInstance.write(value);
-    if(_TwoWireInstance.endTransmission()!=0){
+    _TwoWireInstance->beginTransmission(address);
+    _TwoWireInstance->write(reg);
+    _TwoWireInstance->write(value);
+    if(_TwoWireInstance->endTransmission()!=0){
       error |= 1<<ADDRESS_UNKNOWN_BIT; // set address unknown bit
     } else {
       error &= ~(1<<ADDRESS_UNKNOWN_BIT);
@@ -95,13 +95,13 @@ void MPR121_type::setRegister(uint8_t reg, uint8_t value){
 uint8_t MPR121_type::getRegister(uint8_t reg){
   uint8_t scratch;
 
-    _TwoWireInstance.beginTransmission(address);
-    _TwoWireInstance.write(reg); // set address to read from our requested register
-    _TwoWireInstance.endTransmission(false); // repeated start
+    _TwoWireInstance->beginTransmission(address);
+    _TwoWireInstance->write(reg); // set address to read from our requested register
+    _TwoWireInstance->endTransmission(false); // repeated start
 
-    if(_TwoWireInstance.requestFrom(address,(uint8_t)1) == 1){  // just a single byte
+    if(_TwoWireInstance->requestFrom(address,(uint8_t)1) == 1){  // just a single byte
       error &= ~(1<<ADDRESS_UNKNOWN_BIT); // all good, clear the bit
-      scratch = _TwoWireInstance.read();
+      scratch = _TwoWireInstance->read();
     } else {
       error |= 1<<ADDRESS_UNKNOWN_BIT; //set the bit - something went wrong
     }
@@ -125,12 +125,14 @@ bool MPR121_type::begin(uint8_t address, uint8_t touchThreshold, uint8_t release
   // SDA and SCL should idle high, but MPR121 can get stuck waiting to complete a transaction
   // this code detects this state and releases us from it
 
-  boolean stuck_transaction = false;
-  uint8_t stuck_transaction_retry_count = 0;
-  const uint8_t stuck_transaction_retry_MAX = 10;
 	_TwoWireInstance = TwoWireInstance;
 
 /*  has to be done Outside this Library!
+
+  boolean stuck_transaction = false;
+  uint8_t stuck_transaction_retry_count = 0;
+  const uint8_t stuck_transaction_retry_MAX = 10;
+
   ::pinMode( PIN_WIRE_SDA, INPUT_PULLUP );
   ::pinMode( PIN_WIRE_SCL, INPUT_PULLUP );
 
@@ -179,7 +181,7 @@ bool MPR121_type::begin(uint8_t address, uint8_t touchThreshold, uint8_t release
       setReleaseThreshold( releaseThreshold );
     }
 
-    if( interruptPin != defaultSettings.INTERRUPT ){
+    if( interruptPin != defaultSettings.IRQ_PIN ){
       setInterruptPin( interruptPin );
     }
 
@@ -229,11 +231,11 @@ void MPR121_type::restoreSavedThresholds() {
 }
 
 void MPR121_type::goSlow(){
-  _TwoWireInstance.setClock(100000L); // set I2C clock to 100kHz
+  _TwoWireInstance->setClock(100000L); // set I2C clock to 100kHz
 }
 
 void MPR121_type::goFast(){
-    _TwoWireInstance.setClock(400000L); // set I2C clock to 400kHz
+    _TwoWireInstance->setClock(400000L); // set I2C clock to 400kHz
 }
 
 void MPR121_type::run(){
@@ -318,7 +320,7 @@ void MPR121_type::applySettings(MPR121_settings_type *settings){
   error &= ~(1<<NOT_INITED_BIT); // clear not inited error as we have just inited!
   setTouchThreshold(settings->TTHRESH);
   setReleaseThreshold(settings->RTHRESH);
-  setInterruptPin(settings->INTERRUPT);
+  setInterruptPin(settings->IRQ_PIN);
 
   if(wasRunning) run();
 }
@@ -395,25 +397,25 @@ bool MPR121_type::updateFilteredData(){
 
   uint8_t LSB, MSB;
 
-  _TwoWireInstance.beginTransmission(address);
-  _TwoWireInstance.write(MPR121_E0FDL); // set address register to read from the start of the
+  _TwoWireInstance->beginTransmission(address);
+  _TwoWireInstance->write(MPR121_E0FDL); // set address register to read from the start of the
                 //filtered data
-  _TwoWireInstance.endTransmission(false); // repeated start
+  _TwoWireInstance->endTransmission(false); // repeated start
 
   if(touchStatusChanged()) {
     autoTouchStatusFlag = true;
   }
 
-  if(_TwoWireInstance.requestFrom(address,(uint8_t)26)==26){
+  if(_TwoWireInstance->requestFrom(address,(uint8_t)26)==26){
     for(int i=0; i<13; i++){ // 13 filtered values
       if(touchStatusChanged()) {
         autoTouchStatusFlag = true;
       }
-      LSB = _TwoWireInstance.read();
+      LSB = _TwoWireInstance->read();
       if(touchStatusChanged()) {
         autoTouchStatusFlag = true;
       }
-      MSB = _TwoWireInstance.read();
+      MSB = _TwoWireInstance->read();
       filteredData[i] = ((MSB << 8) | LSB);
     }
     return(true);
@@ -433,21 +435,21 @@ int MPR121_type::getFilteredData(uint8_t electrode){
 bool MPR121_type::updateBaselineData(){
   if(!isInited()) return(false);
 
-  _TwoWireInstance.beginTransmission(address);
-  _TwoWireInstance.write(MPR121_E0BV);  // set address register to read from the start of the
+  _TwoWireInstance->beginTransmission(address);
+  _TwoWireInstance->write(MPR121_E0BV);  // set address register to read from the start of the
                 // baseline data
-  _TwoWireInstance.endTransmission(false); // repeated start
+  _TwoWireInstance->endTransmission(false); // repeated start
 
   if(touchStatusChanged()) {
     autoTouchStatusFlag = true;
   }
 
-  if(_TwoWireInstance.requestFrom(address,(uint8_t)13)==13){
+  if(_TwoWireInstance->requestFrom(address,(uint8_t)13)==13){
     for(int i=0; i<13; i++){ // 13 filtered values
       if(touchStatusChanged()) {
         autoTouchStatusFlag = true;
       }
-      baselineData[i] = _TwoWireInstance.read()<<2;
+      baselineData[i] = _TwoWireInstance->read()<<2;
     }
     return(true);
     } else {

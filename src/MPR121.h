@@ -52,7 +52,7 @@ struct MPR121_settings_type
   uint8_t TTHRESH;
   uint8_t RTHRESH;
 
-  uint8_t INTERRUPT;
+  uint8_t IRQ_PIN;
 
   // general electrode touch sense baseline filters
   // rising filter
@@ -109,7 +109,7 @@ struct MPR121_settings_type
   MPR121_settings_type():
     TTHRESH(40),
     RTHRESH(20),
-    INTERRUPT(4),   // note that this is not a hardware interrupt, just the digital
+    IRQ_PIN(4),   // note that this is not a hardware interrupt, just the digital
                     // pin that the MPR121 ~INT pin is connected to
     MHDR(0x01),
     NHDR(0x01),
